@@ -2,362 +2,161 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Gerador de Wallpapers</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerador de Wallpaper</title>
   <style>
-    /* ---------- Fundo com desenho infantil em SVG ---------- */
     body {
-      margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
-      min-height: 100vh;
-      background-color: #FFFBDE; /* amarelo bem suave */
-      position: relative;
-      overflow-x: hidden;
-    }
-    /* SVG ocupa 100% e desenhos “palito” coloridos */
-    #fundo-svg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 0;
-    }
-
-    /* ---------- Container principal e responsividade ---------- */
-    .wrapper { 
-      position: relative;
-      z-index: 1; /* acima do SVG */
-      max-width: 1000px;
-      margin: auto;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Stick_Figures_Art.png/640px-Stick_Figures_Art.png') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: blur(5px);
+      margin: 0;
       padding: 20px;
-      box-sizing: border-box;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .container {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    /* Em telas maiores, duas colunas */
-    @media (min-width: 768px) {
-      .container {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    /* Card semitransparente para controles e preview */
-    .card {
-      background: rgba(255,255,255,0.85);
+      background: rgba(255, 255, 255, 0.8);
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #444;
+    h1 {
+      text-align: center;
+      font-size: 1.5em;
+      margin-bottom: 20px;
     }
-    select, input, textarea, button {
+
+    input, select, button {
       width: 100%;
-      margin-top: 5px;
-      padding: 8px;
+      padding: 10px;
+      margin-top: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      font-size: 1rem;
       box-sizing: border-box;
     }
-    textarea { resize: vertical; }
 
     button {
-      background-color: #ff8c42;
-      color: white;
+      background: linear-gradient(45deg, #ff9a9e, #fad0c4);
       border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      margin-top: 15px;
-      transition: background-color 0.2s;
-    }
-    button:hover {
-      background-color: #e07b35;
-    }
-
-    .preview img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .share-buttons {
-      margin-top: 10px;
-    }
-    .share-buttons button {
-      width: auto;
-      display: inline-block;
-      margin-right: 8px;
-      margin-top: 5px;
-      padding: 6px 12px;
-      background-color: #6c63ff;
-    }
-    .share-buttons button:hover {
-      background-color: #5a53d1;
-    }
-
-    .history {
-      margin-top: 30px;
-    }
-    .history h3 {
-      margin-bottom: 10px;
-      color: #333;
-    }
-    .history-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .history-list img {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 5px;
-      border: 2px solid #fff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-      cursor: pointer;
-    }
-    .download-link {
-      display: inline-block;
-      margin-top: 10px;
-      color: #ff8c42;
       font-weight: bold;
-      text-decoration: none;
+      cursor: pointer;
     }
-    .download-link:hover {
-      color: #e07b35;
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    img {
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    #loading {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 15px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- SVG de fundo: desenhos de palitinhos bem simples -->
-  <svg id="fundo-svg" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid slice">
-    <!-- Figura 1: palitinho azul -->
-    <circle cx="50" cy="60" r="8" fill="#3498db"/>
-    <line x1="50" y1="68" x2="50" y2="100" stroke="#3498db" stroke-width="3"/>
-    <line x1="50" y1="80" x2="40" y2="90" stroke="#3498db" stroke-width="3"/>
-    <line x1="50" y1="80" x2="60" y2="90" stroke="#3498db" stroke-width="3"/>
-    <line x1="50" y1="100" x2="45" y2="120" stroke="#3498db" stroke-width="3"/>
-    <line x1="50" y1="100" x2="55" y2="120" stroke="#3498db" stroke-width="3"/>
+  <div class="container">
+    <h1>Gerador de Wallpaper</h1>
 
-    <!-- Figura 2: palitinho vermelho -->
-    <circle cx="250" cy="80" r="8" fill="#e74c3c"/>
-    <line x1="250" y1="88" x2="250" y2="120" stroke="#e74c3c" stroke-width="3"/>
-    <line x1="250" y1="100" x2="240" y2="110" stroke="#e74c3c" stroke-width="3"/>
-    <line x1="250" y1="100" x2="260" y2="110" stroke="#e74c3c" stroke-width="3"/>
-    <line x1="250" y1="120" x2="245" y2="140" stroke="#e74c3c" stroke-width="3"/>
-    <line x1="250" y1="120" x2="255" y2="140" stroke="#e74c3c" stroke-width="3"/>
+    <input type="text" id="prompt" placeholder="Descreva a imagem">
 
-    <!-- Figura 3: palitinho verde -->
-    <circle cx="120" cy="200" r="8" fill="#2ecc71"/>
-    <line x1="120" y1="208" x2="120" y2="240" stroke="#2ecc71" stroke-width="3"/>
-    <line x1="120" y1="220" x2="110" y2="230" stroke="#2ecc71" stroke-width="3"/>
-    <line x1="120" y1="220" x2="130" y2="230" stroke="#2ecc71" stroke-width="3"/>
-    <line x1="120" y1="240" x2="115" y2="260" stroke="#2ecc71" stroke-width="3"/>
-    <line x1="120" y1="240" x2="125" y2="260" stroke="#2ecc71" stroke-width="3"/>
+    <select id="emotionalTone">
+      <option value="">Tom emocional (opcional)</option>
+      <option value="feliz">Feliz</option>
+      <option value="triste">Triste</option>
+      <option value="misterioso">Misterioso</option>
+      <option value="romântico">Romântico</option>
+    </select>
 
-    <!-- rabiscos de cor soltos -->
-    <circle cx="220" cy="220" r="5" fill="#f1c40f"/>
-    <circle cx="40" cy="240" r="6" fill="#9b59b6"/>
-    <circle cx="180" cy="40" r="4" fill="#e67e22"/>
-    <circle cx="260" cy="260" r="7" fill="#16a085"/>
-  </svg>
+    <select id="style">
+      <option value="">Estilo (opcional)</option>
+      <option value="realista">Realista</option>
+      <option value="cartoon">Cartoon</option>
+      <option value="abstrato">Abstrato</option>
+      <option value="minimalista">Minimalista</option>
+    </select>
 
-  <div class="wrapper">
-    <h1>🎨 Gerador de Wallpapers com IA</h1>
+    <button onclick="gerarImagem()">Gerar Imagem</button>
 
-    <div class="container">
-      <!-- ---------- Controles (lado esquerdo em desktop, topo em mobile) ---------- -->
-      <div class="card">
-        <label for="estilo">Estilo Artístico</label>
-        <select id="estilo">
-          <option value="realista">Realista</option>
-          <option value="cartoon">Cartoon</option>
-          <option value="futurista">Futurista</option>
-          <option value="surreal">Surreal</option>
-        </select>
+    <div id="loading">Gerando imagem... ⏳</div>
 
-        <label for="tema">Tema Principal</label>
-        <input type="text" id="tema" placeholder="Ex.: Floresta mágica">
+    <img id="imagem-gerada" src="" alt="Imagem Gerada">
 
-        <label for="elementos">Elementos Secundários</label>
-        <input type="text" id="elementos" placeholder="Ex.: pássaros, rios">
-
-        <label for="cores">Paleta de Cores</label>
-        <input type="text" id="cores" placeholder="Ex.: tons pastel">
-
-        <label for="tom">Tom Emocional</label>
-        <select id="tom">
-          <option value="alegre">Alegre</option>
-          <option value="sombrio">Sombrio</option>
-          <option value="sereno">Sereno</option>
-          <option value="dramático">Dramático</option>
-        </select>
-
-        <label for="fundo">Cor de Fundo</label>
-        <input type="color" id="fundo" value="#ffffff">
-
-        <label for="iluminacao">Iluminação</label>
-        <select id="iluminacao">
-          <option value="natural">Natural</option>
-          <option value="neon">Neon</option>
-          <option value="pôr do sol">Pôr do Sol</option>
-          <option value="noturna">Noturna</option>
-        </select>
-
-        <label for="textura">Textura</label>
-        <select id="textura">
-          <option value="suave">Suave</option>
-          <option value="áspera">Áspera</option>
-          <option value="metálica">Metálica</option>
-          <option value="aveludada">Aveludada</option>
-        </select>
-
-        <label for="resolucao">Resolução</label>
-        <select id="resolucao">
-          <option value="1024x1024">1024×1024</option>
-          <option value="1920x1080">1920×1080</option>
-          <option value="3840x2160">4K (3840×2160)</option>
-        </select>
-
-        <label for="texto">Texto Opcional</label>
-        <textarea id="texto" rows="2" placeholder="Texto na imagem (opcional)"></textarea>
-
-        <button onclick="gerarImagem()">🎨 Gerar Imagem</button>
-      </div>
-
-      <!-- ---------- Preview (lado direito em desktop, abaixo em mobile) ---------- -->
-      <div class="card preview">
-        <h3>Preview</h3>
-        <img id="imagem" src="" alt="Imagem Gerada" style="display:none;">
-        <div class="share-buttons" style="display:none;">
-          <button onclick="compartilhar('facebook')">Facebook</button>
-          <button onclick="compartilhar('twitter')">Twitter</button>
-          <button onclick="compartilhar('whatsapp')">WhatsApp</button>
-        </div>
-        <a id="download" class="download-link" style="display:none;" download="wallpaper.png">
-          ⬇️ Baixar Imagem
-        </a>
-      </div>
-    </div>
-
-    <!-- ---------- Histórico de thumbnails ---------- -->
-    <div class="history">
-      <h3>Histórico</h3>
-      <div class="history-list" id="historico"></div>
-    </div>
   </div>
 
   <script>
-    const historico = [];
-
-    function gerarPrompt() {
-      const estilo = document.getElementById('estilo').value;
-      const tema = document.getElementById('tema').value;
-      const elementos = document.getElementById('elementos').value;
-      const cores = document.getElementById('cores').value;
-      const tom = document.getElementById('tom').value;
-      const fundo = document.getElementById('fundo').value;
-      const iluminacao = document.getElementById('iluminacao').value;
-      const textura = document.getElementById('textura').value;
-      const texto = document.getElementById('texto').value;
-
-      return `Estilo ${estilo}, tema ${tema}, elementos ${elementos}, cores ${cores}, tom ${tom}, fundo ${fundo}, iluminação ${iluminacao}, textura ${textura}${texto ? ', texto: ' + texto : ''}.`;
-    }
-
     async function gerarImagem() {
-      const prompt = gerarPrompt();
-      const [w, h] = document.getElementById('resolucao').value.split('x').map(n => parseInt(n));
-      
+      const promptBase = document.getElementById('prompt').value.trim();
+      const emotionalTone = document.getElementById('emotionalTone').value;
+      const style = document.getElementById('style').value;
+
+      if (!promptBase) {
+        alert("Por favor, descreva a imagem.");
+        return;
+      }
+
+      const fullPrompt = `${promptBase} ${emotionalTone ? ', tom: ' + emotionalTone : ''} ${style ? ', estilo: ' + style : ''}`;
+
+      const loading = document.getElementById('loading');
+      const img = document.getElementById('imagem-gerada');
+      loading.style.display = 'block';
+      img.src = '';
+
       try {
         const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/core', {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer SUA_API_KEY_AQUI',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Authorization': 'Bearer sk-SZa7X6DfIlLDCkv7VuIbwK61ebEn5WI9NdxM6irZfky5WYJU',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
-            prompt: prompt,
-            output_format: "png",
             model: "stable-diffusion-xl-v1-0",
-            width: w,
-            height: h
+            prompt: fullPrompt,
+            output_format: "png",
+            width: 512,
+            height: 512
           })
         });
 
         if (!response.ok) {
-          alert("Erro ao conectar com a Stability AI.");
-          return;
+          throw new Error("Erro ao gerar a imagem: " + response.status);
         }
 
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
+        const data = await response.json();
 
-        // Exibe a imagem no preview
-        const img = document.getElementById('imagem');
-        img.src = url;
-        img.style.display = 'block';
+        if (!data.image) {
+          throw new Error("Nenhuma imagem retornada.");
+        }
 
-        // Exibe botão de download
-        const dl = document.getElementById('download');
-        dl.href = url;
-        dl.style.display = 'inline-block';
+        img.src = 'data:image/png;base64,' + data.image;
 
-        // Exibe botões de compartilhamento
-        document.querySelector('.share-buttons').style.display = 'block';
-
-        // Adiciona ao histórico
-        adicionarHistorico(url);
       } catch (err) {
-        console.error(err);
-        alert("Ocorreu um erro ao gerar a imagem.");
+        alert("Erro: " + err.message);
+      } finally {
+        loading.style.display = 'none';
       }
-    }
-
-    function adicionarHistorico(url) {
-      historico.unshift(url);
-      const container = document.getElementById('historico');
-      container.innerHTML = ''; 
-      historico.forEach(src => {
-        const thumb = document.createElement('img');
-        thumb.src = src;
-        thumb.onclick = () => {
-          document.getElementById('imagem').src = src;
-        };
-        container.appendChild(thumb);
-      });
-    }
-
-    function compartilhar(rede) {
-      const url = document.getElementById('imagem').src;
-      let shareUrl = '';
-      if (rede === 'facebook') {
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-      } else if (rede === 'twitter') {
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`;
-      } else if (rede === 'whatsapp') {
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(url)}`;
-      }
-      window.open(shareUrl, '_blank');
     }
   </script>
+
 </body>
 </html>
